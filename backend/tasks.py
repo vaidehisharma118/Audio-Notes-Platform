@@ -66,21 +66,16 @@ def process_audio(self, note_id):
         # -----------------------------------------
         # SUMMARY
         # -----------------------------------------
+        if note.summary:
+            print(f"Summary already exists for note {note.id}. Skipping Gemini.")
+        else:
+            note.status = "SUMMARIZING"
+            db.commit()
 
-        note.status = "SUMMARIZING"
-        db.commit()
+            print(f"Generating summary for note {note.id}")
+            summary = summarize_text(note.transcript)
 
-        print(f"Generating summary for note {note_id}")
-
-        summary = summarize_text(
-            note.transcript
-        )
-
-        note.summary = summary
-
-        # -----------------------------------------
-        # COMPLETED
-        # -----------------------------------------
+            note.summary = summary
 
         note.status = "COMPLETED"
         note.error_message = None
