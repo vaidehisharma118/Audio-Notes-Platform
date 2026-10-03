@@ -1,229 +1,286 @@
 export default function ArchitecturePage() {
   return (
-    <main className="min-h-screen bg-gray-100 px-6 py-10 text-black">
+    <main className="min-h-screen bg-gray-100 px-4 py-10 text-black">
       <div className="mx-auto max-w-5xl">
 
-        <a
-          href="/"
-          className="text-blue-600 hover:underline"
-        >
-          ← Back to Audio Notes
-        </a>
+        {/* Header */}
 
-        <h1 className="mt-6 text-4xl font-bold text-black">
-          Architecture
-        </h1>
+        <div className="mb-8">
+          <a
+            href="/"
+            className="text-blue-600 hover:underline"
+          >
+            ← Back to Audio Notes
+          </a>
 
-        <p className="mt-3 text-black">
-          Audio Notes uses an asynchronous processing pipeline so that
-          long audio files do not block the user's request.
-        </p>
+          <h1 className="mt-6 text-4xl font-bold text-black">
+            System Architecture
+          </h1>
+
+          <p className="mt-3 text-gray-700">
+            This page explains how an uploaded audio file moves through
+            the Audio Notes system, how long-running processing is
+            handled, and where the generated results are stored.
+          </p>
+
+          {/* GitHub link */}
+
+          <a
+            href="https://github.com/vaidehisharma118/Audio-Notes-Platform"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-block font-medium text-blue-600 hover:underline"
+          >
+            View Source Code on GitHub →
+          </a>
+        </div>
 
         {/* System Flow */}
 
-        <section className="mt-8 rounded-xl bg-white p-6 shadow">
+        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            System Flow
+            Upload → Transcript → Summary
           </h2>
 
           <div className="mt-6 space-y-3 text-center font-medium">
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
               Next.js Frontend
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
               FastAPI Backend
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
-              Supabase Storage + PostgreSQL
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
+              Supabase Storage
+            </div>
+
+            <div className="text-black">+</div>
+
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
+              PostgreSQL
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
               Celery + Redis
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
               Background Worker
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
               Gnani Batch STT
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
-              Gemini LLM
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
+              Transcript
             </div>
 
             <div className="text-black">↓</div>
 
-            <div className="rounded-lg border bg-gray-100 p-4 text-black">
-              PostgreSQL
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
+              Gemini
             </div>
 
+            <div className="text-black">↓</div>
+
+            <div className="rounded-xl border bg-gray-50 p-4 text-black">
+              PostgreSQL
+            </div>
           </div>
         </section>
 
-        {/* Upload Flow */}
+        {/* Upload */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            1. Upload Flow
+            1. Flow From Upload to Transcript
           </h2>
 
-          <p className="mt-3 text-black">
-            The user selects an audio file in the Next.js frontend.
-            The file is sent to FastAPI using a multipart upload.
+          <p className="mt-3 text-gray-700">
+            The user selects an audio file in the Next.js frontend and
+            submits it to the FastAPI backend using a multipart upload.
           </p>
 
-          <p className="mt-3 text-black">
-            FastAPI stores the audio file in the private Supabase
-            Storage bucket and creates an audio_notes row in PostgreSQL.
-            The row starts in the QUEUED state.
+          <p className="mt-3 text-gray-700">
+            FastAPI creates a record in PostgreSQL and uploads the audio
+            file to a private Supabase Storage bucket. The database
+            stores the filename, storage path, file size, processing
+            status, transcript, summary, and any error message.
+          </p>
+
+          <p className="mt-3 text-gray-700">
+            After the file is stored, FastAPI places a Celery task into
+            Redis and immediately returns the note ID to the frontend.
+          </p>
+
+          <p className="mt-3 text-gray-700">
+            The background worker downloads the audio from storage and
+            sends it to the Gnani Batch STT API. Gnani processes the
+            recording asynchronously. The worker creates the job,
+            starts it, polls its status, retrieves the transcript URL,
+            and downloads the transcript.
           </p>
         </section>
 
-        {/* Background Jobs */}
+        {/* Files */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            2. Background Processing
+            2. Where Files and Data Live
           </h2>
 
-          <p className="mt-3 text-black">
-            FastAPI places a Celery task into Redis and immediately
-            returns the note ID to the frontend.
+          <p className="mt-3 text-gray-700">
+            Audio files are stored in a private Supabase Storage bucket
+            called <strong>audio-files</strong>. PostgreSQL is used for
+            application data rather than storing the raw audio itself.
           </p>
 
-          <p className="mt-3 text-black">
-            A Celery worker consumes the task and performs the
-            long-running transcription and summarization work.
-          </p>
-        </section>
-
-        {/* Transcription */}
-
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
-          <h2 className="text-2xl font-semibold text-black">
-            3. Transcription
-          </h2>
-
-          <p className="mt-3 text-black">
-            The worker downloads the audio from private storage and
-            sends it to the Gnani Batch STT API.
+          <p className="mt-3 text-gray-700">
+            PostgreSQL stores the audio metadata, current processing
+            status, transcript, generated summary, and error information.
           </p>
 
-          <p className="mt-3 text-black">
-            Gnani Batch processing is asynchronous. The worker creates
-            a job, starts it, polls its status, and downloads the
-            resulting transcript after completion.
-          </p>
-        </section>
-
-        {/* Summary */}
-
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
-          <h2 className="text-2xl font-semibold text-black">
-            4. Summarization
-          </h2>
-
-          <p className="mt-3 text-black">
-            After transcription completes, the worker sends the
-            transcript to a Gemini model to generate a concise summary
-            and important key points.
-          </p>
-
-          <p className="mt-3 text-black">
-            Both the transcript and summary are stored in PostgreSQL.
+          <p className="mt-3 text-gray-700">
+            Keeping binary audio in object storage and text/metadata in
+            PostgreSQL keeps the database smaller and separates storage
+            responsibilities.
           </p>
         </section>
 
         {/* Long Audio */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            5. Long Audio Handling
+            3. Handling Long Audio
           </h2>
 
-          <p className="mt-3 text-black">
-            Long recordings are processed asynchronously instead of
-            keeping the browser request open. The frontend polls the
-            note status every few seconds and displays stages such as
-            QUEUED, TRANSCRIBING, SUMMARIZING, and COMPLETED.
+          <p className="mt-3 text-gray-700">
+            Long audio is handled as a background job instead of being
+            processed inside the user's HTTP request. This prevents the
+            browser from waiting for a long-running transcription request.
           </p>
 
-          <p className="mt-3 text-black">
-            Audio is stored in object storage rather than PostgreSQL,
-            keeping the database focused on metadata and generated text.
+          <p className="mt-3 text-gray-700">
+            Gnani Batch STT is used because it is designed for
+            asynchronous processing of long recordings. The Celery
+            worker waits for the Gnani job to finish and updates the
+            database as the processing moves through different stages.
+          </p>
+
+          <p className="mt-3 text-gray-700">
+            The frontend polls the backend every few seconds and displays
+            stages such as QUEUED, TRANSCRIBING, SUMMARIZING, and
+            COMPLETED.
           </p>
         </section>
 
-        {/* Sync vs Async */}
+        {/* Sync vs Background */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            6. Why Background Processing?
+            4. Synchronous vs Background Work
           </h2>
 
-          <p className="mt-3 text-black">
-            Transcription of long audio can take significantly longer
-            than a normal HTTP request. Running it synchronously would
-            leave the upload request waiting and makes failures harder
-            to handle.
+          <p className="mt-3 text-gray-700">
+            The upload request is synchronous only for the initial file
+            validation, database record creation, and storage upload.
+            Once the file is safely stored, the API queues the processing
+            task and returns without waiting for transcription or
+            summarization.
           </p>
 
-          <p className="mt-3 text-black">
-            Using Celery and Redis separates the upload request from
-            long-running processing and allows the worker to retry or
-            recover from temporary external API failures.
+          <p className="mt-3 text-gray-700">
+            Transcription and summarization run in the background using
+            Celery workers. Redis acts as the message broker between the
+            API and the worker.
           </p>
         </section>
 
-        {/* Failure Handling */}
+        {/* Failure */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            7. Failure Handling
+            5. Failure Handling
           </h2>
 
-          <p className="mt-3 text-black">
-            Processing failures are stored in the database along with
-            an error message. The frontend displays the failure and
-            provides a Retry action.
+          <p className="mt-3 text-gray-700">
+            If storage, transcription, or summarization fails, the
+            worker records the error in PostgreSQL and changes the note
+            status to FAILED.
           </p>
 
-          <p className="mt-3 text-black">
-            Temporary API rate limits and service errors are retried
-            with backoff where appropriate.
+          <p className="mt-3 text-gray-700">
+            The frontend displays the error to the user and provides a
+            Retry button. Temporary external API rate-limit responses
+            are retried with backoff.
           </p>
         </section>
 
-        {/* Future Improvements */}
+        {/* More Time */}
 
-        <section className="mt-6 rounded-xl bg-white p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h2 className="text-2xl font-semibold text-black">
-            8. What I Would Improve With More Time
+            6. What I Would Do Differently With More Time
           </h2>
 
-          <p className="mt-3 text-black">
-            With more development time, I would add streaming or
-            chunked uploads for very large files, more detailed progress
-            reporting, webhook-based transcription completion, stronger
-            authentication and authorization, automated cleanup of old
-            files, and production monitoring.
+          <p className="mt-3 text-gray-700">
+            With more time, I would improve large-file uploads using
+            streaming or resumable uploads, add more detailed progress
+            reporting, use Gnani webhooks where appropriate, add stronger
+            authentication and authorization, add automated cleanup and
+            retention policies, and introduce production monitoring and
+            logging.
+          </p>
+        </section>
+
+        {/* Tech Stack */}
+
+        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <h2 className="text-2xl font-semibold text-black">
+            7. Technologies Used
+          </h2>
+
+          <p className="mt-3 text-gray-700">
+            Frontend: Next.js and TypeScript
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Backend: FastAPI and Python
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Database: PostgreSQL
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Storage: Supabase Storage
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Background Jobs: Celery + Redis
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Speech-to-Text: Gnani Batch STT
+          </p>
+
+          <p className="mt-2 text-gray-700">
+            Summarization: Gemini
           </p>
         </section>
 
